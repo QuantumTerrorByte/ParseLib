@@ -111,11 +111,25 @@ namespace ParseLib
 
         public object ParseNumeric(Type type, string value)
         {
+            if (!IsNumeric(type))
+                throw new ArgumentException($"Type {type.Name} is not numeric");
+            
             var cleanString = new Regex(@"\d*\,?\d*").Match(value).Value;
             if (string.IsNullOrEmpty(cleanString))
                 throw new Exception($"Failed parse {value} to {type.Name}");
 
             return CostumeSwitch[type].Invoke(cleanString);
+        }
+
+        public bool TryParseNumeric<T>(Type type, string value, out T result) where T : struct
+        {
+            var answer = IsNumeric(type);
+            if (answer)
+                result = (T) ParseNumeric(type, value);
+            else
+                result = default;
+            
+            return answer;
         }
     }
 
