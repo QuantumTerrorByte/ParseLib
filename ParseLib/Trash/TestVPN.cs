@@ -1,11 +1,12 @@
-﻿using System.Net;
+﻿using System.Collections;
+using System.Net;
 using AngleSharp;
 using AngleSharp.Dom;
 using AngleSharp.Io.Network;
 
-namespace ParseLib;
+namespace ParseLib.Trash;
 
-public static class TestVPN
+static class TestVPN
 {
     public static async Task RefUrl()
     {
@@ -85,5 +86,40 @@ public static class TestVPN
         {
             Console.WriteLine(e);
         }
+    }
+
+    public static void Temp()
+    {
+        Console.WriteLine("=============================================================");
+            Console.WriteLine(typeof(string[]).IsAssignableTo(typeof(IEnumerable)));
+            Console.WriteLine(typeof(List<int>).IsAssignableTo(typeof(IEnumerable)));
+            Console.WriteLine(typeof(IEnumerable<string>).IsAssignableTo(typeof(IEnumerable)));
+            Console.WriteLine(typeof(ICollection<int>).IsAssignableTo(typeof(IEnumerable)));
+            Console.WriteLine("-------------------------------------------------------------");
+            Console.WriteLine(typeof(IEnumerable).IsAssignableTo(typeof(string[])));
+            Console.WriteLine(typeof(IEnumerable).IsAssignableTo(typeof(List<string>)));
+            Console.WriteLine(typeof(IEnumerable).IsAssignableTo(typeof(IEnumerable<string>)));
+            Console.WriteLine(typeof(IEnumerable).IsAssignableTo(typeof(ICollection<int>)));
+            Console.WriteLine("=============================================================");
+            Console.WriteLine(typeof(string[]).IsAssignableFrom(typeof(IEnumerable)));
+            Console.WriteLine(typeof(List<int>).IsAssignableFrom(typeof(IEnumerable)));
+            Console.WriteLine(typeof(IEnumerable<string>).IsAssignableFrom(typeof(IEnumerable)));
+            Console.WriteLine(typeof(ICollection<int>).IsAssignableFrom(typeof(IEnumerable)));
+            Console.WriteLine("-------------------------------------------------------------");
+            Console.WriteLine(typeof(IEnumerable).IsAssignableFrom(typeof(string[])));
+            Console.WriteLine(typeof(IEnumerable).IsAssignableFrom(typeof(List<string>)));
+            Console.WriteLine(typeof(IEnumerable).IsAssignableFrom(typeof(IEnumerable<string>)));
+            Console.WriteLine(typeof(IEnumerable).IsAssignableFrom(typeof(ICollection<int>)));
+            Console.WriteLine("=============================================================");
+            Console.WriteLine(typeof(string[]).IsInstanceOfType(typeof(IEnumerable)));
+            Console.WriteLine(typeof(List<int>).IsInstanceOfType(typeof(IEnumerable)));
+            Console.WriteLine(typeof(IEnumerable<string>).IsInstanceOfType(typeof(IEnumerable)));
+            Console.WriteLine(typeof(ICollection<int>).IsInstanceOfType(typeof(IEnumerable)));
+            Console.WriteLine("-------------------------------------------------------------");
+            Console.WriteLine(typeof(IEnumerable).IsInstanceOfType(typeof(string[])));
+            Console.WriteLine(typeof(IEnumerable).IsInstanceOfType(typeof(List<string>)));
+            Console.WriteLine(typeof(IEnumerable).IsInstanceOfType(typeof(IEnumerable<string>)));
+            Console.WriteLine(typeof(IEnumerable).IsInstanceOfType(typeof(ICollection<int>)));
+            Console.WriteLine("=============================================================");
     }
 }

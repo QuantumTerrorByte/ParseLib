@@ -22,7 +22,7 @@ public class NumericHelper
 
     public bool IsNumeric(Type type) => CostumeSwitch.Keys.Contains(type);
 
-    public object ParseNumeric(Type type, string value)
+    public dynamic ParseNumeric(Type type, string value)
     {
         if (!IsNumeric(type))
             throw new ArgumentException($"Type {type.Name} is not numeric");

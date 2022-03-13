@@ -8,13 +8,13 @@ using ParseLib.Models.DAO;
 
 namespace ParseLib.Core
 {
-    public class ParserIHerb
+    public class Parser
     {
         public IBrowsingContext BrowsingContext { get; }
 
         public NumericHelper NumericHelper { get; } = new NumericHelper();
 
-        public ParserIHerb(IBrowsingContext browsingContext)
+        public Parser(IBrowsingContext browsingContext)
             => BrowsingContext = browsingContext;
 
         public async Task Parse(string url, int firstPage = default, int lastPage = default, string prefix = "")
@@ -97,66 +97,106 @@ namespace ParseLib.Core
                         prop.SetValue(obj, value);
                     }
                 }
-
-                if (propType.IsInterface)
+                else if (propType.IsAssignableTo(typeof(IEnumerable)))
                 {
-                    var generic = propType.GetGenericArguments().FirstOrDefault(typeof(string));
-                    var tempArr = Array.CreateInstance(generic, selectorResult.Length);
-
-                    if (enableDefault)
+                    if (propType.IsInterface)
                     {
-                        for (int i = skipStart; i < selectorResult.Length - skipEnd; i++)
+                        var generic = propType.GetGenericArguments().FirstOrDefault(typeof(string));
+                        var tempArr = (IList) Array.CreateInstance(generic, selectorResult.Length);
+
+                        if (enableDefault)
                         {
-                            
-                            
+                            for (int i = skipStart; i < selectorResult.Length - skipEnd; i++)
+                            {
+                                tempArr[i] = selectorResult[i].InnerHtml;
+                            }
                         }
+
+                        var arr = selectorResult.Skip(skipStart).SkipLast(skipEnd).Select(e => e.InnerHtml);
+
+
+                        prop.SetValue(obj, tempArr);
                     }
-
-
-                    prop.SetValue(obj, tempArr);
-                }
-                else if (propType.IsArray)
-                {
-                    var tempArr = Activator.CreateInstance(propType.GetType(), selectorResult.Length);
-                }
-                else
-                {
-                    var generic = propType.GetGenericArguments().FirstOrDefault(typeof(string));
-                    var tempArr = Array.CreateInstance(generic, selectorResult.Length);
+                    else if (propType.IsArray)
+                    {
+                        var tempArr = Activator.CreateInstance(propType.GetType(), selectorResult.Length);
+                    }
+                    else
+                    {
+                        var generic = propType.GetGenericArguments().FirstOrDefault(typeof(string));
+                        var tempArr = Array.CreateInstance(generic, selectorResult.Length);
+                    }
                 }
             }
         }
 
-        public static void MapIList(
-            IHtmlCollection<Element> htmlCollection,
-            object obj,
-            PropertyInfo prop,
-            bool enableDefault)
+        public void MapIList(IHtmlCollection<Element> selectorResult, object obj,
+            PropertyInfo prop, MapCommand command)
         {
-            var propType = prop.GetType();
-            if (propType.IsInterface)
-            {
-                var generic = propType.GetGenericArguments().FirstOrDefault(typeof(string));
-                var tempArr = Array.CreateInstance(generic, htmlCollection.Length);
+            var propType = prop.PropertyType;
 
-                if (enableDefault)
+            if (propType.IsAssignableTo(typeof(IEnumerable))) // IEnumerable, ICollection, IList, List, Set, Array 
+            {
+                Type? resultType = null;
+                dynamic arrayDTO;
+
+                if (propType.IsArray)
+                    resultType = propType.GetElementType();
+                else
+                    resultType = propType.GetGenericArguments().FirstOrDefault(typeof(string));
+
+                if (resultType == null)
+                    throw new Exception(
+                        $"Undefined type: {propType}, available types: IEnumerable, ICollection, IList, List, Set, Array ");
+
+                arrayDTO = Array.CreateInstance(resultType,
+                    selectorResult.Length - (command.SkipStart + command.SkipEnd));
+
+                if (NumericHelper.IsNumeric(resultType)) // what is better forgot dry or waste performance?
                 {
-                    foreach (var element in htmlCollection)
+                    for (int i = command.SkipStart; i < selectorResult.Length - command.SkipEnd; i++)
                     {
+                        var content = selectorResult[i].InnerHtml;
+                        if (string.IsNullOrWhiteSpace(content))
+                        {
+                            arrayDTO[i] = NumericHelper.ParseNumeric(resultType, content);
+                        }
+                    }
+
+                    if (!command.EnableDefaultValue)
+                    {
+                        //todo clear arr, search info dynamic with extension methods
+                    }
+                }
+                else
+                {
+                    for (int i = command.SkipStart; i < selectorResult.Length - command.SkipEnd; i++)
+                    {
+                        var content = selectorResult[i].InnerHtml;
+                        if (!string.IsNullOrWhiteSpace(content) || command.EnableDefaultValue)
+                        {
+                            arrayDTO[i] = content;
+                        }
                     }
                 }
 
-
-                prop.SetValue(obj, tempArr);
-            }
-            else if (propType.IsArray)
-            {
-                var tempArr = Activator.CreateInstance(propType.GetType(), htmlCollection.Length);
-            }
-            else
-            {
-                var generic = propType.GetGenericArguments().FirstOrDefault(typeof(string));
-                var tempArr = Array.CreateInstance(generic, htmlCollection.Length);
+                if (propType.IsArray)
+                {
+                    prop.SetValue(obj, arrayDTO);
+                }
+                else
+                {
+                    try
+                    {
+                        dynamic temp = Activator.CreateInstance(propType, arrayDTO);
+                        prop.SetValue(obj, temp);
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e);
+                        throw;
+                    }
+                }
             }
         }
     }
